@@ -90,6 +90,16 @@ impl<T: SimpleSerialize + PartialEq, const N: usize> PartialEq for Vector<T, N> 
 
 impl<T: SimpleSerialize + Eq, const N: usize> Eq for Vector<T, N> {}
 
+impl<T: SimpleSerialize, const N: usize> From<[T; N]> for Vector<T, N> {
+    fn from(data: [T; N]) -> Self {
+        let leaf_count = Self::get_leaf_count();
+        Self {
+            data: data.into(),
+            cache: MerkleCache::with_leaves(leaf_count),
+        }
+    }
+}
+
 impl<T: SimpleSerialize, const N: usize> TryFrom<Vec<T>> for Vector<T, N> {
     type Error = SimpleSerializeError;
 
@@ -334,6 +344,17 @@ mod tests {
         let vector = Vector::<u8, 20>::from_iter(data);
         assert_eq!(vector[..10], [2u8; 10]);
         assert_eq!(vector[10..], [0u8; 10]);
+    }
+
+    #[test]
+    fn from_array() {
+        let arr = [2u8; COUNT];
+        let arr_vector: Vector<u8, COUNT> = Vector::from(arr);
+
+        let vec = vec![2u8; COUNT];
+        let vec_vector: Vector<u8, COUNT> = Vector::try_from(vec).unwrap();
+
+        assert_eq!(arr_vector, vec_vector);
     }
 
     #[test]
