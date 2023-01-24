@@ -100,6 +100,12 @@ impl<T: SimpleSerialize, const N: usize> From<[T; N]> for Vector<T, N> {
     }
 }
 
+impl<T: SimpleSerialize + Copy, const N: usize> From<Vector<T, N>> for [T; N] {
+    fn from(vector: Vector<T, N>) -> Self {
+        vector.data.as_slice().try_into().unwrap()
+    }
+}
+
 impl<T: SimpleSerialize, const N: usize> TryFrom<Vec<T>> for Vector<T, N> {
     type Error = SimpleSerializeError;
 
@@ -347,14 +353,17 @@ mod tests {
     }
 
     #[test]
-    fn from_array() {
-        let arr = [2u8; COUNT];
+    fn from_to_array() {
+        const VAL: u8 = 2;
+        let arr = [VAL; COUNT];
         let arr_vector: Vector<u8, COUNT> = Vector::from(arr);
 
-        let vec = vec![2u8; COUNT];
+        let vec = vec![VAL; COUNT];
         let vec_vector: Vector<u8, COUNT> = Vector::try_from(vec).unwrap();
-
         assert_eq!(arr_vector, vec_vector);
+
+        let vector_arr: [u8; COUNT] = arr_vector.into();
+        assert_eq!(vector_arr, arr);
     }
 
     #[test]
